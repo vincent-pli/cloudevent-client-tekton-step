@@ -25,22 +25,21 @@ import (
 	"log"
 	"os"
 
-	cloudevents "github.com/cloudevents/sdk-go/v1"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 
 	"knative.dev/eventing/pkg/utils"
 )
 
 var (
-	targete string
+	target    string
 	eventID   string
 	eventType string
 	source    string
 	data      string
-
 )
 
 func init() {
-	flag.StringVar(&targete, "targte", "", "Target")
+	flag.StringVar(&target, "target", "", "Target")
 	flag.StringVar(&eventID, "event-id", "", "Event ID to use. Defaults to a generated UUID")
 	flag.StringVar(&eventType, "event-type", "google.events.action.demo", "The Event Type to use.")
 	flag.StringVar(&source, "source", "", "Source URI to use. Defaults to the current machine's hostname")
@@ -49,11 +48,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-
-	if len(flag.Args()) != 1 {
-		fmt.Println("Usage: sendevent [flags] <webhook>\nFor details about valid flags, run sendevent --help")
-		os.Exit(1)
-	}
 
 	var untyped map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &untyped); err != nil {
@@ -65,18 +59,7 @@ func main() {
 		source = fmt.Sprintf("http://%s", utils.GetClusterDomainName())
 	}
 
-	t, err := cloudevents.NewHTTPTransport(
-		cloudevents.WithTarget(target),
-		cloudevents.WithBinaryEncoding(),
-	)
-	if err != nil {
-		log.Printf("failed to create transport, %v", err)
-		os.Exit(1)
-	}
-	c, err := cloudevents.NewClient(t,
-		cloudevents.WithTimeNow(),
-		cloudevents.WithUUIDs(),
-	)
+	c, err := cloudevents.NewDefaultClient()
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
 		os.Exit(1)
@@ -93,10 +76,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if _, resp, err := c.Send(context.Background(), event); err != nil {
-		fmt.Printf("Failed to send event to %s: %s\n", target, err)
-		os.Exit(1)
-	} else if resp != nil {
-		fmt.Printf("Got response from %s\n%s\n", target, resp)
+	// Set a target.
+	ctx := cloudevents.ContextWithTarget(context.Background(), target)
+
+	// Send that Event.
+	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
+		log.Fatalf("failed to send, %v", err)}
 	}
+
+	// if _, resp, err := c.Send(ctx, event); err != nil {
+	// 	fmt.Printf("Failed to send event to %s: %s\n", target, err)
+	// 	os.Exit(1)
+	// } else if resp != nil {
+	// 	fmt.Printf("Got response from %s\n%s\n", target, resp)
+	// }
 }

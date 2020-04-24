@@ -25,13 +25,13 @@ init:
 	mkdir -p ${BIN_DIR}
 
 local: init
-	go build -o=${BIN_DIR}/kubeclient ./cmd/client
+	go build -o=${BIN_DIR}/cloudeventclient ./cmd/client
 
 build-linux: init
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/kubeclient ./cmd/client
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o=${BIN_DIR}/cloudeventclient ./cmd/client
 
 image: build-linux
-	docker build  . -t vincentpli/kubeclient:$(TAG)
+	docker build  . -t vincentpli/cloudeventclient:$(TAG)
 
 update:
 	go mod download
