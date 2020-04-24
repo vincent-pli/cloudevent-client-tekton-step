@@ -26,37 +26,28 @@ import (
 	"os"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-
-	"knative.dev/eventing/pkg/utils"
 )
-
-var (
-	target    string
-	eventID   string
-	eventType string
-	source    string
-	data      string
+const(
+	Tese = "xxx"
 )
-
-func init() {
-	flag.StringVar(&target, "target", "", "Target")
-	flag.StringVar(&eventID, "event-id", "", "Event ID to use. Defaults to a generated UUID")
-	flag.StringVar(&eventType, "event-type", "google.events.action.demo", "The Event Type to use.")
-	flag.StringVar(&source, "source", "", "Source URI to use. Defaults to the current machine's hostname")
-	flag.StringVar(&data, "data", `{"hello": "world!"}`, "Event data")
-}
-
 func main() {
+	
+	var target string
+	var eventID string
+	var eventType string
+	var source string
+	var data string
+	flag.StringVar(&target, "target", "", "Target")
+        flag.StringVar(&eventID, "event-id", "", "Event ID to use. Defaults to a generated UUID")
+        flag.StringVar(&eventType, "event-type", "google.events.action.demo", "The Event Type to use.")
+        flag.StringVar(&source, "source", "", "Source URI to use. Defaults to the current machine's hostname")
+        flag.StringVar(&data, "data", `{"hello": "world!"}`, "Event data")
 	flag.Parse()
-
+	
 	var untyped map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &untyped); err != nil {
 		fmt.Println("Currently sendevent only supports JSON event data")
 		os.Exit(1)
-	}
-
-	if source == "" {
-		source = fmt.Sprintf("http://%s", utils.GetClusterDomainName())
 	}
 
 	c, err := cloudevents.NewDefaultClient()
@@ -64,14 +55,14 @@ func main() {
 		log.Printf("failed to create client, %v", err)
 		os.Exit(1)
 	}
-
+	
 	event := cloudevents.NewEvent()
 	if eventID != "" {
 		event.SetID(eventID)
 	}
 	event.SetType(eventType)
 	event.SetSource(source)
-	if err := event.SetData(untyped); err != nil {
+	if err := event.SetData(cloudevents.ApplicationJSON, untyped); err != nil {
 		log.Printf("failed to set data, %v", err)
 		os.Exit(1)
 	}
@@ -81,13 +72,6 @@ func main() {
 
 	// Send that Event.
 	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
-		log.Fatalf("failed to send, %v", err)}
+		log.Fatalf("failed to send, %v", result)
 	}
-
-	// if _, resp, err := c.Send(ctx, event); err != nil {
-	// 	fmt.Printf("Failed to send event to %s: %s\n", target, err)
-	// 	os.Exit(1)
-	// } else if resp != nil {
-	// 	fmt.Printf("Got response from %s\n%s\n", target, resp)
-	// }
 }
