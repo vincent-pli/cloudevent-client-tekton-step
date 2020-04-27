@@ -16,11 +16,6 @@ spec:
     description: Address of target, for example: http://helloworld-go.default.svc.cluster.local
   - name: slink
     description: Slink of target object
-    # value: |
-    #   apiVersion: serving.knative.dev/v1alpha1
-    #   kind: Service
-    #   name: github-event-display
-    #   namespace: default
   steps:
   - name: send
     image: quay.io/openshift-knative/knative-eventing-sendevent

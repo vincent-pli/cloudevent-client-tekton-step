@@ -6,26 +6,9 @@ spec:
   taskRef:
     name: sender
   params:
-  - name: action
-    value: create
-  - name: success-condition
-    value: status.phase == Running
-  - name: failure-condition
-    value: status.phase in (Failed, Error)
-  - name: output
-    value: "{.metadata.name},{.metadata.namespace}"
-  - name: set-ownerreference
-    value: "true"
-  - name: manifest
+  - name: slink
     value: |
-      apiVersion: v1
-      kind: Pod
-      metadata:
-        generateName: myapp-pod-
-        labels:
-          app: myapp
-      spec:
-        containers:
-        - name: myapp-container
-          image: docker
-          command: ['sh', '-c', 'echo Hello Kubernetes! && sleep 30']
+      apiVersion: serving.knative.dev/v1alpha1
+      kind: Service
+      name: event-display
+      namespace: default
