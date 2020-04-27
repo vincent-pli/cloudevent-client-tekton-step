@@ -3,6 +3,7 @@ module github.com/vincent-pli/cloudevent-client
 go 1.13
 
 require (
+	contrib.go.opencensus.io/exporter/stackdriver v0.13.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/cloudevents/sdk-go/v2 v2.0.0-preview8
 	github.com/docker/docker v1.4.2-0.20190327010347-be7ac8be2ae0 // indirect
@@ -10,7 +11,9 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/prometheus/client_golang v1.1.0 // indirect
 	github.com/prometheus/common v0.7.0 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	github.com/tidwall/gjson v1.6.0 // indirect
+	github.com/vincent-pli/gitlabsource v0.0.0-20190902134402-ca59c5e7763d
 	//github.ibm.com/panpxpx/klsf v0.0.0-00010101000000-000000000000
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20191023171146-3cf2f69b5738 // indirect
 	go.uber.org/multierr v1.4.0 // indirect
@@ -19,11 +22,14 @@ require (
 	golang.org/x/tools v0.0.0-20191116214431-80313e1ba718 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20191115221424-83cc0476cb11 // indirect
-	k8s.io/client-go v12.0.0+incompatible // indirect
+	k8s.io/api v0.17.2
+	k8s.io/apimachinery v0.17.2
+	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/kubernetes v1.17.0 // indirect
 	k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6 // indirect
 	knative.dev/eventing v0.14.1
-	sigs.k8s.io/controller-runtime v0.5.1 // indirect
+	knative.dev/pkg v0.0.0-20200425232149-7b6e21a57a31
+	sigs.k8s.io/controller-runtime v0.5.1
 )
 
 replace (

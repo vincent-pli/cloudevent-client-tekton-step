@@ -1,0 +1,33 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: sender
+spec:
+  params:
+  - name: event-type
+    description: Type of Event
+  - name: event-id
+    description: ID of Event
+  - name: source
+    description: Source of Event
+  - name: data
+    description: Data of Event, support Json only
+  - name: target
+    description: Address of target, for example: http://helloworld-go.default.svc.cluster.local
+  - name: slink
+    description: Slink of target object
+    # value: |
+    #   apiVersion: serving.knative.dev/v1alpha1
+    #   kind: Service
+    #   name: github-event-display
+    #   namespace: default
+  steps:
+  - name: send
+    image: quay.io/openshift-knative/knative-eventing-sendevent
+    args:
+    - --target=$(params.target)
+    - --event-id=$(params.event-id) 
+    - --event-type=$(params.event-type)
+    - --source=$(params.source)
+    - --data=$(params.data)
+    - --slink=$(params.slink)
