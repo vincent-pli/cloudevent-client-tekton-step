@@ -10,5 +10,5 @@ spec:
     value: |
       apiVersion: serving.knative.dev/v1alpha1
       kind: Service
-      name: event-display
+      name: helloworld-go
       namespace: default

@@ -1,8 +1,7 @@
-FROM gcr.io/cloud-builders/kubectl
+FROM gcr.io/distroless/base:latest
 
 WORKDIR /
 
-COPY _output/bin/kubeclient /usr/local/bin
+COPY _output/bin/cloudeventclient /usr/local/bin/cloudeventclient
 
-ENTRYPOINT []
-CMD ["kubeclient"]
+ENTRYPOINT ["/usr/local/bin/cloudeventclient"]

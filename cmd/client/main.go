@@ -28,24 +28,28 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/dynamic"
 	"knative.dev/pkg/apis/duck"
 	"knative.dev/pkg/apis/duck/v1beta1"
-	"knative.dev/pkg/injection/clients/dynamicclient"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 var (
-	client dynamic.Interface
+	c   client.Client
+	err error
 )
 
 func init() {
-	client = dynamicclient.Get(context.TODO())
+	c, err = client.New(config.GetConfigOrDie(), client.Options{})
+	if err != nil {
+		log.Infof("Create client failed: %+v", err)
+		os.Exit(1)
+	}
 }
-func main() {
 
+func main() {
 	var target string
 	var eventID string
 	var eventType string
@@ -60,17 +64,17 @@ func main() {
 	flag.StringVar(&slink, "slink", "", "Slink")
 	flag.Parse()
 
-	var sinkOjb *corev1.ObjectReference
+	var sinkOjb corev1.ObjectReference
 	if slink != "" {
 		reader := strings.NewReader(slink)
 		decoder := yaml.NewYAMLToJSONDecoder(reader)
-		err := decoder.Decode(sinkOjb)
+		err := decoder.Decode(&sinkOjb)
 		if err != nil {
 			log.Infof("unmarshal slink failed: %+v", err)
 			os.Exit(1)
 		}
 
-		target, err = getSinkURI(context.Background(), client, sinkOjb)
+		target, err = getSinkURI(context.Background(), c, &sinkOjb)
 		if err != nil {
 			log.Infof("Parse slink failed: %+v", err)
 			os.Exit(1)
@@ -95,14 +99,25 @@ func main() {
 	}
 	event.SetType(eventType)
 	event.SetSource(source)
+	/*
 	if err := event.SetData(cloudevents.ApplicationJSON, untyped); err != nil {
+		log.Printf("failed to set data, %v", err)
+		os.Exit(1)
+	}
+	*/
+	if err := event.SetData(cloudevents.TextPlain, "xxxxxxxxxxxxxx"); err != nil {
 		log.Printf("failed to set data, %v", err)
 		os.Exit(1)
 	}
 
 	// Set a target.
 	ctx := cloudevents.ContextWithTarget(context.Background(), target)
-
+	fmt.Println("---------------------")
+	fmt.Println(target)
+	fmt.Println(eventID)
+	fmt.Println(eventType)
+	fmt.Println(source)
+	fmt.Println(data)
 	// Send that Event.
 	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
 		log.Fatalf("failed to send, %v", result)
@@ -111,18 +126,21 @@ func main() {
 
 // GetSinkURI retrieves the sink URI from the object referenced by the given
 // ObjectReference.
-func getSinkURI(ctx context.Context, c dynamic.Interface, sink *corev1.ObjectReference) (string, error) {
+func getSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReference) (string, error) {
 	if sink == nil {
 		return "", fmt.Errorf("sink ref is nil")
 	}
+	fmt.Println("xxxxxxxxxxxxxxxxxxx")
+	fmt.Printf("====== %+v", *sink)
+	fmt.Println("")
+	objIdentifier := fmt.Sprintf("\"%s/%s\" (%s)", sink.Namespace, sink.Name, sink.GroupVersionKind())
 
-	plural, _ := meta.UnsafeGuessKindToResource(sink.GroupVersionKind())
-	u, err := c.Resource(plural).Namespace(sink.Namespace).Get(sink.Name, metav1.GetOptions{})
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(sink.GroupVersionKind())
+	err := c.Get(context.TODO(), client.ObjectKey{Name: sink.Name, Namespace: sink.Namespace}, u)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to deserialize sink %s: %v", objIdentifier, err)
 	}
-
-	objIdentifier := fmt.Sprintf("\"%s/%s\" (%s)", u.GetNamespace(), u.GetName(), u.GroupVersionKind())
 
 	t := v1beta1.AddressableType{}
 	err = duck.FromUnstructured(u, &t)

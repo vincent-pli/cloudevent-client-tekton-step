@@ -5,20 +5,25 @@ metadata:
 spec:
   params:
   - name: event-type
+    default: "example.type"
     description: Type of Event
   - name: event-id
+    default: ""
     description: ID of Event
   - name: source
+    default: "example/uri"
     description: Source of Event
   - name: data
+    default: '{"hello": "world!"}'
     description: Data of Event, support Json only
   - name: target
-    description: Address of target, for example: http://helloworld-go.default.svc.cluster.local
+    default: ""
+    description: Address of target, for example, http://helloworld-go.default.svc.cluster.local
   - name: slink
     description: Slink of target object
   steps:
   - name: send
-    image: quay.io/openshift-knative/knative-eventing-sendevent
+    image: index.docker.io/vincentpli/cloudeventclient:v0.0.1
     args:
     - --target=$(params.target)
     - --event-id=$(params.event-id) 
