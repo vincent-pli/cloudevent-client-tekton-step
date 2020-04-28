@@ -99,25 +99,13 @@ func main() {
 	}
 	event.SetType(eventType)
 	event.SetSource(source)
-	/*
 	if err := event.SetData(cloudevents.ApplicationJSON, untyped); err != nil {
-		log.Printf("failed to set data, %v", err)
-		os.Exit(1)
-	}
-	*/
-	if err := event.SetData(cloudevents.TextPlain, "xxxxxxxxxxxxxx"); err != nil {
 		log.Printf("failed to set data, %v", err)
 		os.Exit(1)
 	}
 
 	// Set a target.
 	ctx := cloudevents.ContextWithTarget(context.Background(), target)
-	fmt.Println("---------------------")
-	fmt.Println(target)
-	fmt.Println(eventID)
-	fmt.Println(eventType)
-	fmt.Println(source)
-	fmt.Println(data)
 	// Send that Event.
 	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
 		log.Fatalf("failed to send, %v", result)
@@ -130,9 +118,6 @@ func getSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReferen
 	if sink == nil {
 		return "", fmt.Errorf("sink ref is nil")
 	}
-	fmt.Println("xxxxxxxxxxxxxxxxxxx")
-	fmt.Printf("====== %+v", *sink)
-	fmt.Println("")
 	objIdentifier := fmt.Sprintf("\"%s/%s\" (%s)", sink.Namespace, sink.Name, sink.GroupVersionKind())
 
 	u := &unstructured.Unstructured{}
