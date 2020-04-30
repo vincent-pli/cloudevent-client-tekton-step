@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -34,6 +35,11 @@ import (
 	"knative.dev/pkg/apis/duck/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+)
+
+const (
+	BaseDir  = "/tekton/results/"
+	FileName = "response"
 )
 
 var (
@@ -107,8 +113,16 @@ func main() {
 	// Set a target.
 	ctx := cloudevents.ContextWithTarget(context.Background(), target)
 	// Send that Event.
-	if result := c.Send(ctx, event); !cloudevents.IsACK(result) {
+	reps, result := c.Request(ctx, event)
+	if cloudevents.IsNACK(result) {
 		log.Fatalf("failed to send, %v", result)
+		os.Exit(1)
+	}
+	fmt.Printf("%s", reps)
+	err = writeFiles(reps.Data())
+	if err != nil {
+		log.Fatalf("failed to write response to file, %v", err)
+		os.Exit(1)
 	}
 }
 
@@ -142,4 +156,16 @@ func getSinkURI(ctx context.Context, c client.Client, sink *corev1.ObjectReferen
 	}
 
 	return t.Status.Address.URL.String(), nil
+}
+
+// Write file to the disk
+func writeFiles(respData []byte) error {
+	outputFile := BaseDir + FileName
+	err = ioutil.WriteFile(outputFile, respData, 0644)
+	if err != nil {
+		log.Errorf("Write response to file failed: %+v:", err)
+		return err
+	}
+
+	return nil
 }

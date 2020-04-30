@@ -31,3 +31,6 @@ spec:
     - --source=$(params.source)
     - --data=$(params.data)
     - --slink=$(params.slink)
+  - name: echo
+    image: busybox
+    script: cat /tekton/results/response
